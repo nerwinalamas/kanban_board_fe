@@ -10,6 +10,7 @@ type Item = {
     id: string;
     title: string;
     description?: string;
+    columnId: string;
 };
 
 type Column = {
