@@ -16,6 +16,7 @@ import {
 import DraggableItem from "../components/DraggableItem";
 import useModal from "../hooks/useModal";
 import useColumnStore from "../store/useColumn";
+import Footer from "../components/Footer";
 
 const Board = () => {
     const { columns } = useColumnStore();
@@ -34,7 +35,7 @@ const Board = () => {
 
     return (
         <div className="w-full grid p-4">
-            <div className="flex flex-col gap-5 p-4 rounded-lg overflow-hidden bg-slate-800">
+            <div className="md:h-[90vh] md:overflow-y-auto flex flex-col gap-5 p-4 rounded-lg overflow-hidden bg-slate-800">
                 <div className="flex justify-between items-center">
                     <h1 className="text-xl font-semibold text-white">
                         Kanban Board
@@ -47,7 +48,7 @@ const Board = () => {
                     </button>
                 </div>
                 {columns.length > 0 && (
-                    <div className="w-full flex gap-5 overflow-x-auto">
+                    <div className="w-full flex flex-col items-center justify-center md:items-start md:flex-wrap md:flex-row gap-5 xl:justify-start xl:h-full xl:flex-nowrap xl:overflow-x-auto">
                         <DndContext
                             sensors={sensors}
                             collisionDetection={closestCorners}
@@ -56,28 +57,30 @@ const Board = () => {
                             <SortableContext
                                 items={columns.map((column) => column.id)}
                             >
-                                {columns.map((task) => (
+                                {columns.map((column) => (
                                     <DroppableColumn
-                                        key={task.id}
-                                        id={task.id}
-                                        title={task.title}
+                                        key={column.id}
+                                        id={column.id}
+                                        title={column.title}
                                     >
                                         <SortableContext
-                                            items={task.items.map(
+                                            items={column.items.map(
                                                 (item) => item.id
                                             )}
                                         >
-                                            {task.items.map((item) => (
-                                                <DraggableItem
-                                                    key={item.id}
-                                                    id={item.id}
-                                                    title={item.title}
-                                                    description={
-                                                        item.description
-                                                    }
-                                                    columnId={task.id}
-                                                />
-                                            ))}
+                                     
+                                                {column.items.map((item) => (
+                                                    <DraggableItem
+                                                        key={item.id}
+                                                        id={item.id}
+                                                        title={item.title}
+                                                        description={
+                                                            item.description
+                                                        }
+                                                        columnId={column.id}
+                                                    />
+                                                ))}
+                                       
                                         </SortableContext>
                                     </DroppableColumn>
                                 ))}
@@ -86,6 +89,7 @@ const Board = () => {
                     </div>
                 )}
             </div>
+            <Footer />
         </div>
     );
 };
