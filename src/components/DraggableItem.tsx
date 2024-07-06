@@ -22,10 +22,9 @@ const DraggableItem = ({ id, title, description, columnId }: Item) => {
             style={style}
             {...listeners}
             {...attributes}
-            className="flex flex-col gap-2 p-4 rounded-lg cursor-pointer bg-slate-800"
+            className="h-20 p-4 flex-shrink-0 rounded-lg cursor-pointer bg-slate-800"
         >
-            <h2 className="font-semibold capitalize">{title}</h2>
-            <p>{description && description}</p>
+            <h2 className="capitalize">{title}</h2>
         </div>
     );
 };
