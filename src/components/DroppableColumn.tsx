@@ -1,6 +1,5 @@
-import { useDroppable } from "@dnd-kit/core";
 import { ColumnProps } from "../types";
-import { Ellipsis, Plus } from "lucide-react";
+import { Ellipsis, Grip, Plus } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -11,16 +10,24 @@ import useModal from "../hooks/useModal";
 import React, { useState } from "react";
 import useColumnStore from "../store/useColumn";
 import { v4 as uuidv4 } from "uuid";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const DroppableColumn = ({ id, title, children }: ColumnProps) => {
-    const { setNodeRef } = useDroppable({
-        id,
-    });
+    const { attributes, setNodeRef, listeners, transform, transition } =
+        useSortable({
+            id,
+        });
     const { openModal } = useModal();
     const { createItem } = useColumnStore();
     const [toggleDropDownMenu, setToggleDropDownMenu] = useState(false);
     const [toggleAddItem, setToggleAddItem] = useState(false);
     const [newItemTitle, setNewItemTitle] = useState("");
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        transition,
+    };
 
     const handleUpdateColumn = () => {
         openModal("updateColumnModal", {
@@ -66,6 +73,8 @@ const DroppableColumn = ({ id, title, children }: ColumnProps) => {
     return (
         <div
             ref={setNodeRef}
+            {...attributes}
+            style={style}
             className="w-72 h-max bg-slate-700 flex flex-col flex-shrink-0 justify-between gap-5 p-4 rounded-lg"
         >
             <div className="flex flex-col gap-5">
@@ -76,7 +85,7 @@ const DroppableColumn = ({ id, title, children }: ColumnProps) => {
                         onOpenChange={toggleMenu}
                     >
                         <DropdownMenuTrigger>
-                            <div className="cursor-pointer p-2 rounded-full hover:bg-slate-600">
+                            <div title="More Settings" className="cursor-pointer p-2 rounded-full hover:bg-slate-600">
                                 <Ellipsis />
                             </div>
                         </DropdownMenuTrigger>
@@ -103,7 +112,6 @@ const DroppableColumn = ({ id, title, children }: ColumnProps) => {
                     {children}
                 </div>
             </div>
-
             {toggleAddItem ? (
                 <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                     <input
@@ -128,12 +136,22 @@ const DroppableColumn = ({ id, title, children }: ColumnProps) => {
                     </div>
                 </form>
             ) : (
-                <div
-                    onClick={() => setToggleAddItem(true)}
-                    className="flex items-center gap-1 p-2 rounded-md cursor-pointer hover:bg-slate-600"
-                >
-                    <Plus size={18} />
-                    <p>Add card</p>
+                <div className="flex justify-between items-center gap-2">
+                    <div
+                        title="Add Item"
+                        onClick={() => setToggleAddItem(true)}
+                        className="w-full flex items-center gap-1 p-2 rounded-md cursor-pointer hover:bg-slate-600"
+                    >
+                        <Plus size={18} />
+                        <p>Add Item</p>
+                    </div>
+                    <div
+                        {...listeners}
+                        title={`Move ${title}`}
+                        className="w-max flex items-center justify-center p-2 rounded-md cursor-pointer hover:bg-slate-600"
+                    >
+                        <Grip />
+                    </div>
                 </div>
             )}
         </div>
