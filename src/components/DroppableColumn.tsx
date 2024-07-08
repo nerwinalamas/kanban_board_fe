@@ -12,12 +12,17 @@ import useColumnStore from "../store/useColumn";
 import { v4 as uuidv4 } from "uuid";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useDroppable } from "@dnd-kit/core";
 
 const DroppableColumn = ({ id, title, children }: ColumnProps) => {
     const { attributes, setNodeRef, listeners, transform, transition } =
         useSortable({
             id,
+            data: {
+                type: "column",
+            },
         });
+    const { setNodeRef: setDroppableRef } = useDroppable({ id });
     const { openModal } = useModal();
     const { createItem } = useColumnStore();
     const [toggleDropDownMenu, setToggleDropDownMenu] = useState(false);
@@ -85,7 +90,10 @@ const DroppableColumn = ({ id, title, children }: ColumnProps) => {
                         onOpenChange={toggleMenu}
                     >
                         <DropdownMenuTrigger>
-                            <div title="More Settings" className="cursor-pointer p-2 rounded-full hover:bg-slate-600">
+                            <div
+                                title="More Settings"
+                                className="cursor-pointer p-2 rounded-full hover:bg-slate-600"
+                            >
                                 <Ellipsis />
                             </div>
                         </DropdownMenuTrigger>
@@ -108,7 +116,10 @@ const DroppableColumn = ({ id, title, children }: ColumnProps) => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-                <div className="max-h-[47vh] flex flex-col gap-2 overflow-y-auto">
+                <div
+                    ref={setDroppableRef}
+                    className="max-h-[47vh] min-h-10 flex flex-col gap-2 overflow-y-auto overflow-x-hidden"
+                >
                     {children}
                 </div>
             </div>
@@ -117,6 +128,7 @@ const DroppableColumn = ({ id, title, children }: ColumnProps) => {
                     <input
                         type="text"
                         placeholder="Title"
+                        autoFocus
                         value={newItemTitle}
                         onChange={(e) => setNewItemTitle(e.target.value)}
                         className="p-4 rounded-lg cursor-pointer outline-none bg-slate-800"
