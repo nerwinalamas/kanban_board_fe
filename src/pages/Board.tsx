@@ -9,9 +9,10 @@ import {
 } from "@dnd-kit/core";
 import DroppableColumn from "../components/DroppableColumn";
 import {
-    arrayMove,
+    horizontalListSortingStrategy,
     SortableContext,
     sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import DraggableItem from "../components/DraggableItem";
 import useModal from "../hooks/useModal";
@@ -19,7 +20,7 @@ import useColumnStore from "../store/useColumn";
 import Footer from "../components/Footer";
 
 const Board = () => {
-    const { columns } = useColumnStore();
+    const { columns, moveItem, moveColumn } = useColumnStore();
     const { openModal } = useModal();
 
     const sensors = useSensors(
@@ -30,7 +31,65 @@ const Board = () => {
     );
 
     const handleDragEnd = (e: DragEndEvent) => {
-        // const { active, over } = e;
+        const { active, over } = e;
+
+        if (!over) return;
+        if (active.id === over.id) return;
+
+        const activeId = active.id.toString();
+        const overId = over.id.toString();
+
+        if (active.data.current?.type === "column") {
+            const oldIndex = columns.findIndex(
+                (column) => column.id === activeId
+            );
+            const newIndex = columns.findIndex(
+                (column) => column.id === overId
+            );
+
+            moveColumn(oldIndex, newIndex);
+        } else {
+            const activeColumnId = active.data.current?.columnId.toString();
+            const overColumnId = over.data.current?.columnId.toString();
+
+            if (activeColumnId && overColumnId) {
+                const activeColumn = columns.find(
+                    (column) => column.id === activeColumnId
+                );
+                const overColumn = columns.find(
+                    (column) => column.id === overColumnId
+                );
+
+                if (activeColumn && overColumn) {
+                    const activeIndex = activeColumn.items.findIndex(
+                        (item) => item.id === activeId
+                    );
+                    const overIndex = overColumn.items.length
+                        ? overColumn.items.findIndex(
+                              (item) => item.id === overId
+                          )
+                        : 0;
+
+                    if (activeColumnId === overColumnId) {
+                        // Moving within the same column
+                        moveItem(
+                            activeColumnId,
+                            overColumnId,
+                            activeIndex,
+                            overIndex
+                        );
+                    } else {
+                        // Moving between columns
+                        moveItem(
+                            activeColumnId,
+                            overColumnId,
+                            activeIndex,
+                            overIndex
+                        );
+                    }
+                }
+            }
+        }
     };
 
     return (
@@ -55,6 +114,7 @@ const Board = () => {
                             onDragEnd={handleDragEnd}
                         >
                             <SortableContext
+                                strategy={horizontalListSortingStrategy}
                                 items={columns.map((column) => column.id)}
                             >
                                 {columns.map((column) => (
@@ -64,23 +124,24 @@ const Board = () => {
                                         title={column.title}
                                     >
                                         <SortableContext
+                                            strategy={
+                                                verticalListSortingStrategy
+                                            }
                                             items={column.items.map(
                                                 (item) => item.id
                                             )}
                                         >
-                                     
-                                                {column.items.map((item) => (
-                                                    <DraggableItem
-                                                        key={item.id}
-                                                        id={item.id}
-                                                        title={item.title}
-                                                        description={
-                                                            item.description
-                                                        }
-                                                        columnId={column.id}
-                                                    />
-                                                ))}
-                                       
+                                            {column.items.map((item) => (
+                                                <DraggableItem
+                                                    key={item.id}
+                                                    id={item.id}
+                                                    title={item.title}
+                                                    description={
+                                                        item.description
+                                                    }
+                                                    columnId={column.id}
+                                                />
+                                            ))}
                                         </SortableContext>
                                     </DroppableColumn>
                                 ))}
