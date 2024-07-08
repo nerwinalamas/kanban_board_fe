@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { Column, Item } from "../types";
+import { arrayMove } from "@dnd-kit/sortable";
+import { initialColumns } from "../data";
 
 type ColumnState = {
     columns: Column[];
@@ -13,18 +15,20 @@ type ColumnState = {
         updatedItem: Partial<Item>
     ) => void;
     deleteItem: (columnId: string, itemId: string) => void;
+    moveColumn: (sourceIndex: number, destinationIndex: number) => void;
     moveItem: (
         sourceColumnId: string,
-        targetColumnId: string,
-        itemId: string
+        destinationColumnId: string,
+        sourceIndex: number,
+        destinationIndex: number
     ) => void;
 };
 
 const useColumnStore = create<ColumnState>((set) => ({
-    columns: [],
+    columns: initialColumns,
     createColumn: (data) =>
         set((state) => ({
-            columns: [...state.columns, data],
+            columns: [...state.columns, { ...data, items: [] }],
         })),
     updateColumn: (columnId, newTitle) =>
         set((state) => ({
@@ -72,34 +76,62 @@ const useColumnStore = create<ColumnState>((set) => ({
                     : column
             ),
         })),
-    moveItem: (sourceColumnId, targetColumnId, itemId) =>
+    moveColumn: (oldIndex, newIndex) =>
         set((state) => {
-            const itemToMove = state.columns
-                .find((column) => column.id === sourceColumnId)
-                ?.items.find((item) => item.id === itemId);
-            if (!itemToMove) return state;
+            const columns = arrayMove(state.columns, oldIndex, newIndex);
+            return { columns };
+        }),
+    moveItem: (
+        sourceColumnId,
+        destinationColumnId,
+        sourceIndex,
+        destinationIndex
+    ) =>
+        set((state) => {
+            const sourceColumn = state.columns.find(
+                (col) => col.id === sourceColumnId
+            );
+            const destinationColumn = state.columns.find(
+                (col) => col.id === destinationColumnId
+            );
 
-            return {
-                columns: state.columns.map((column) => {
-                    if (column.id === sourceColumnId) {
-                        return {
-                            ...column,
-                            items: column.items.filter(
-                                (item) => item.id !== itemId
-                            ),
-                        };
-                    } else if (column.id === targetColumnId) {
-                        return {
-                            ...column,
-                            items: [
-                                ...column.items,
-                                { ...itemToMove, columnId: targetColumnId },
-                            ],
-                        };
-                    }
-                    return column;
-                }),
-            };
+            if (!sourceColumn || !destinationColumn)
+                return { columns: state.columns };
+
+            // Moving item within the same column
+            if (sourceColumnId === destinationColumnId) {
+                const updatedItems = arrayMove(
+                    sourceColumn.items,
+                    sourceIndex,
+                    destinationIndex
+                );
+                return {
+                    columns: state.columns.map((column) =>
+                        column.id === sourceColumnId
+                            ? { ...column, items: updatedItems }
+                            : column
+                    ),
+                };
+            } else {
+                // Moving item between different columns
+                const [movedItem] = sourceColumn.items.splice(sourceIndex, 1);
+                destinationColumn.items.splice(destinationIndex, 0, movedItem);
+
+                return {
+                    columns: state.columns.map((column) => {
+                        if (column.id === sourceColumnId) {
+                            return { ...column, items: sourceColumn.items };
+                        }
+                        if (column.id === destinationColumnId) {
+                            return {
+                                ...column,
+                                items: destinationColumn.items,
+                            };
+                        }
+                        return column;
+                    }),
+                };
+            }
         }),
 }));
 
