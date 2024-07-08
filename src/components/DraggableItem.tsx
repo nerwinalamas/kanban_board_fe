@@ -9,6 +9,7 @@ const DraggableItem = ({ id, title, description, columnId }: Item) => {
         useSortable({
             id,
             data: {
+                type: "item",
                 columnId,
             },
         });
