@@ -13,6 +13,12 @@ const ViewItemModal = () => {
                         {data?.title}
                     </DialogTitle>
                 </DialogHeader>
+                <div>
+                    <h3 className="text-slate-600 font-semibold">
+                        Description:
+                    </h3>
+                    <p>{data?.description}</p>
+                </div>
             </DialogContent>
         </Dialog>
     );
